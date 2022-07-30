@@ -1,7 +1,20 @@
 // SID data and precalculated sample tables - as found in Frodo emulator 4.1b
 use crate::c64::sid;
 
-pub static mut TRI_TABLE: [u16; 8192] = [0; 8192];
+// calculate triangle table values
+const fn tri_table_gen() -> [u16; 8192] {
+    let mut i = 0;
+    let mut tri_table: [u16; 8192] = [0; 8192];
+    while i < 0x1000 {
+        let val = ((i << 4) | (i >> 8)) as u16;
+        tri_table[i] = val;
+        tri_table[0x1FFF - i] = val;
+        i += 1;
+    }
+    tri_table
+}
+
+pub const TRI_TABLE: [u16; 8192] = tri_table_gen();
 
 pub const TRI_SAW_TABLE: [u16; 256] = [
     0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000, 0x0000,

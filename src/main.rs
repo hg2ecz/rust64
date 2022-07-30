@@ -1,3 +1,5 @@
+#![deny(unsafe_code)]
+
 extern crate byteorder;
 extern crate minifb;
 extern crate num;

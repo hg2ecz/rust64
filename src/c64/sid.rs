@@ -272,15 +272,6 @@ impl SIDAudioDevice {
             sample_idx: 0,
         };
 
-        // calculate triangle table values
-        unsafe {
-            for i in 0..0x1000 {
-                let val = ((i << 4) | (i >> 8)) as u16;
-                TRI_TABLE[i] = val;
-                TRI_TABLE[0x1FFF - i] = val;
-            }
-        }
-
         sid_audio_device.voices[0].modulator = 2;
         sid_audio_device.voices[0].modulatee = 1;
         sid_audio_device.voices[1].modulator = 0;
@@ -676,14 +667,14 @@ impl AudioCallback for SIDAudioDevice {
 
                 let mut output: u16 = 0;
                 match self.voices[i].wave {
-                    WaveForm::Triangle => unsafe {
+                    WaveForm::Triangle => {
                         if self.voices[i].ring {
                             output =
                                 TRI_TABLE[((self.voices[i].wf_cnt ^ (self.voices[modulator].wf_cnt & 0x800000)) >> 11) as usize];
                         } else {
                             output = TRI_TABLE[(self.voices[i].wf_cnt >> 11) as usize];
                         }
-                    },
+                    }
                     WaveForm::Saw => {
                         output = (self.voices[i].wf_cnt >> 8) as u16;
                     }
