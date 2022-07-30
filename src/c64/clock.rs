@@ -24,7 +24,7 @@ impl Clock {
 
         if self.curr_time - self.last_time >= self.clock_period {
             self.last_time = self.curr_time;
-            return true
+            return true;
         }
 
         false
