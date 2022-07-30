@@ -1,7 +1,7 @@
 // keyboard and joystick support
 extern crate minifb;
 
-use c64::cia;
+use crate::c64::cia;
 use minifb::*;
 
 /*

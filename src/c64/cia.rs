@@ -1,7 +1,7 @@
 // CIA chip
-use c64::cpu;
-use c64::memory;
-use c64::vic;
+use crate::c64::cpu;
+use crate::c64::memory;
+use crate::c64::vic;
 use std::cell::RefCell;
 use std::rc::Rc;
 
@@ -36,7 +36,7 @@ impl CIATimer {
     pub fn new(is_ta: bool) -> CIATimer {
         CIATimer {
             state: TimerState::Stop,
-            is_ta: is_ta,
+            is_ta,
             value: 0xFFFF,
             latch: 1,
             ctrl: 0,
@@ -107,10 +107,8 @@ impl CIATimer {
                         } else {
                             self.state = TimerState::WaitCount;
                         }
-                    } else {
-                        if (self.new_ctrl & 0x10) != 0 {
-                            self.state = TimerState::LoadStop;
-                        }
+                    } else if (self.new_ctrl & 0x10) != 0 {
+                        self.state = TimerState::LoadStop;
                     }
                 }
                 TimerState::WaitCount | TimerState::LoadCount => {
@@ -118,10 +116,8 @@ impl CIATimer {
                         if (self.new_ctrl & 8) != 0 {
                             self.new_ctrl &= 0xFE;
                             self.state = TimerState::Stop;
-                        } else {
-                            if (self.new_ctrl & 0x10) != 0 {
-                                self.state = TimerState::LoadWaitCount;
-                            }
+                        } else if (self.new_ctrl & 0x10) != 0 {
+                            self.state = TimerState::LoadWaitCount;
                         }
                     } else {
                         self.state = TimerState::Stop;
@@ -132,12 +128,10 @@ impl CIATimer {
                         if (self.new_ctrl & 0x10) != 0 {
                             self.state = TimerState::LoadWaitCount;
                         }
+                    } else if (self.new_ctrl & 0x10) != 0 {
+                        self.state = TimerState::LoadStop;
                     } else {
-                        if (self.new_ctrl & 0x10) != 0 {
-                            self.state = TimerState::LoadStop;
-                        } else {
-                            self.state = TimerState::CountStop;
-                        }
+                        self.state = TimerState::CountStop;
                     }
                 }
                 _ => (),
@@ -179,6 +173,7 @@ impl CIATimer {
 }
 
 // the actual CIA chip including both timers
+#[allow(clippy::upper_case_acronyms)]
 pub struct CIA {
     mem_ref: Option<memory::MemShared>,
     cpu_ref: Option<cpu::CPUShared>,
@@ -228,7 +223,7 @@ impl CIA {
             cpu_ref: None,
             vic_ref: None,
 
-            is_cia1: is_cia1,
+            is_cia1,
             timer_a: CIATimer::new(true),
             timer_b: CIATimer::new(false),
             irq_mask: 0,
@@ -551,14 +546,13 @@ impl CIA {
                 && (self.tod_sec == self.alarm_sec)
                 && (self.tod_min == self.alarm_min)
                 && (self.tod_hour == self.alarm_hour)
+                && self.trigger_irq(4)
             {
-                if self.trigger_irq(4) {
-                    if self.is_cia1 {
-                        as_mut!(self.cpu_ref).set_cia_irq(true);
-                    } else {
-                        as_mut!(self.cpu_ref).set_nmi(true);
-                    };
-                }
+                if self.is_cia1 {
+                    as_mut!(self.cpu_ref).set_cia_irq(true);
+                } else {
+                    as_mut!(self.cpu_ref).set_nmi(true);
+                };
             }
         }
     }

@@ -2,6 +2,7 @@
 name = "rust64"
 version = "0.6.1"
 authors = [ "Krzysztof Kondrak <krzysztof.kondrak@gmail.com>" ]
+edition = "2021"
 
 [dependencies]
 minifb = "0.20"

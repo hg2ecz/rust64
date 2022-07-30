@@ -11,7 +11,7 @@
 // ind = ($0000)              // indirect
 // rel = $0000                // relative to PC/IP
 
-use c64::cpu;
+use crate::c64::cpu;
 use std::fmt;
 
 pub enum AddrMode {
@@ -30,6 +30,7 @@ pub enum AddrMode {
     IndirectIndexedY(bool),
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub enum Op {
     // Load/store
     LDA,
@@ -264,7 +265,7 @@ pub fn fetch_operand_addr(cpu: &mut cpu::CPU) -> bool {
                 cpu.instruction.operand_addr = cpu.next_byte() as u16;
             }
             1 => {
-                cpu.instruction.operand_addr = cpu.instruction.operand_addr | ((cpu.next_byte() as u16) << 8);
+                cpu.instruction.operand_addr |= (cpu.next_byte() as u16) << 8;
             }
             _ => panic!(
                 "Too many cycles for operand address fetch! ({}) ",
@@ -376,7 +377,7 @@ pub fn fetch_operand_addr(cpu: &mut cpu::CPU) -> bool {
             1 => {
                 let idx = cpu.instruction.index_addr;
                 let hi = cpu.read_byte((idx + 1) & 0xFF) as u16;
-                cpu.instruction.operand_addr = cpu.instruction.operand_addr | (hi << 8);
+                cpu.instruction.operand_addr |= hi << 8;
             }
             _ => panic!(
                 "Too many cycles for operand address fetch! ({}) ",
@@ -715,9 +716,8 @@ pub fn run(cpu: &mut cpu::CPU) -> bool {
         }
         Op::ASL => {
             if cpu.ba_low {
-                match cpu.instruction.addr_mode {
-                    AddrMode::Accumulator => return false,
-                    _ => (),
+                if let AddrMode::Accumulator = cpu.instruction.addr_mode {
+                    return false;
                 }
             }
             let v = cpu.get_operand();
@@ -728,9 +728,8 @@ pub fn run(cpu: &mut cpu::CPU) -> bool {
         }
         Op::LSR => {
             if cpu.ba_low {
-                match cpu.instruction.addr_mode {
-                    AddrMode::Accumulator => return false,
-                    _ => (),
+                if let AddrMode::Accumulator = cpu.instruction.addr_mode {
+                    return false;
                 }
             }
             let v = cpu.get_operand();
@@ -741,9 +740,8 @@ pub fn run(cpu: &mut cpu::CPU) -> bool {
         }
         Op::ROL => {
             if cpu.ba_low {
-                match cpu.instruction.addr_mode {
-                    AddrMode::Accumulator => return false,
-                    _ => (),
+                if let AddrMode::Accumulator = cpu.instruction.addr_mode {
+                    return false;
                 }
             }
             let c = cpu.get_status_flag(cpu::StatusFlag::Carry);
@@ -758,9 +756,8 @@ pub fn run(cpu: &mut cpu::CPU) -> bool {
         }
         Op::ROR => {
             if cpu.ba_low {
-                match cpu.instruction.addr_mode {
-                    AddrMode::Accumulator => return false,
-                    _ => (),
+                if let AddrMode::Accumulator = cpu.instruction.addr_mode {
+                    return false;
                 }
             }
             let c = cpu.get_status_flag(cpu::StatusFlag::Carry);

@@ -1,11 +1,11 @@
 // VIC-II chip
-use c64;
-use c64::cpu;
-use c64::memory;
-use c64::vic_tables::*;
+use crate::c64;
+use crate::c64::cpu;
+use crate::c64::memory;
+use crate::c64::vic_tables::*;
+use crate::utils;
 use std::cell::RefCell;
 use std::rc::Rc;
-use utils;
 
 pub type VICShared = Rc<RefCell<VIC>>;
 
@@ -22,6 +22,7 @@ const ROW24_YSTOP: u16 = 0xF7;
 const FIRST_BADLINE: u16 = 0x30;
 const LAST_BADLINE: u16 = 0xF7;
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct VIC {
     pub window_buffer: Vec<u32>,
     pub last_byte: u8,   // last byte read by VIC
@@ -286,7 +287,7 @@ impl VIC {
                 as_mut!(self.mem_ref).get_ram_bank(memory::MemType::Io).write(addr, value);
             }
             0xD019 => {
-                self.irq_flag = self.irq_flag & (!value & 0x0F);
+                self.irq_flag &= !value & 0x0F;
 
                 if (self.irq_flag & self.irq_mask) != 0 {
                     self.irq_flag |= 0x80;
@@ -384,9 +385,8 @@ impl VIC {
                     self.raster_cnt += 1;
 
                     if self.raster_cnt == self.raster_irq {
-                        match self.raster_irq() {
-                            cpu::Callback::TriggerVICIrq => as_mut!(self.cpu_ref).set_vic_irq(true),
-                            _ => (),
+                        if let cpu::Callback::TriggerVICIrq = self.raster_irq() {
+                            as_mut!(self.cpu_ref).set_vic_irq(true)
                         }
                     }
 
@@ -436,9 +436,8 @@ impl VIC {
                     self.line_start_offset = 0;
 
                     if self.raster_irq == 0 {
-                        match self.raster_irq() {
-                            cpu::Callback::TriggerVICIrq => as_mut!(self.cpu_ref).set_vic_irq(true),
-                            _ => (),
+                        if let cpu::Callback::TriggerVICIrq = self.raster_irq() {
+                            as_mut!(self.cpu_ref).set_vic_irq(true)
                         }
                     }
                 }
@@ -602,21 +601,15 @@ impl VIC {
                 if (ctrl2 & 8) != 0 {
                     if self.raster_cnt == self.dy_stop {
                         self.ud_border_on = true;
-                    } else {
-                        if (ctrl1 & 0x10) != 0 {
-                            if self.raster_cnt == self.dy_start {
-                                self.border_on = false;
-                                self.ud_border_on = false;
-                            } else {
-                                if !self.ud_border_on {
-                                    self.border_on = false;
-                                }
-                            }
-                        } else {
-                            if !self.ud_border_on {
-                                self.border_on = false;
-                            }
+                    } else if (ctrl1 & 0x10) != 0 {
+                        if self.raster_cnt == self.dy_start {
+                            self.border_on = false;
+                            self.ud_border_on = false;
+                        } else if !self.ud_border_on {
+                            self.border_on = false;
                         }
+                    } else if !self.ud_border_on {
+                        self.border_on = false;
                     }
                 }
 
@@ -637,21 +630,15 @@ impl VIC {
                 if (ctrl2 & 8) == 0 {
                     if self.raster_cnt == self.dy_stop {
                         self.ud_border_on = true;
-                    } else {
-                        if (ctrl1 & 0x10) != 0 {
-                            if self.raster_cnt == self.dy_start {
-                                self.border_on = false;
-                                self.ud_border_on = false;
-                            } else {
-                                if !self.ud_border_on {
-                                    self.border_on = false;
-                                }
-                            }
-                        } else {
-                            if !self.ud_border_on {
-                                self.border_on = false;
-                            }
+                    } else if (ctrl1 & 0x10) != 0 {
+                        if self.raster_cnt == self.dy_start {
+                            self.border_on = false;
+                            self.ud_border_on = false;
+                        } else if !self.ud_border_on {
+                            self.border_on = false;
                         }
+                    } else if !self.ud_border_on {
+                        self.border_on = false;
                     }
                 }
 
@@ -814,7 +801,7 @@ impl VIC {
                     if self.border_on_sample[0] {
                         for i in 0..4 {
                             let color_rgba = utils::fetch_c64_color_rgba(self.border_color_sample[i]);
-                            utils::memset8(&mut self.window_buffer, self.line_start_offset + i * 8 as usize, color_rgba);
+                            utils::memset8(&mut self.window_buffer, self.line_start_offset + i * 8_usize, color_rgba);
                         }
                     }
 
@@ -995,12 +982,10 @@ impl VIC {
                     } else {
                         dst_color = self.read_register(0xD023);
                     }
+                } else if (self.last_char_data & 0x40) != 0 {
+                    dst_color = self.read_register(0xD022);
                 } else {
-                    if (self.last_char_data & 0x40) != 0 {
-                        dst_color = self.read_register(0xD022);
-                    } else {
-                        dst_color = self.read_register(0xD021);
-                    }
+                    dst_color = self.read_register(0xD021);
                 }
             }
             _ => dst_color = 0,
@@ -1065,12 +1050,10 @@ impl VIC {
                     } else {
                         dst_color[0] = self.read_register(0xD023);
                     }
+                } else if (self.char_data & 0x40) != 0 {
+                    dst_color[0] = self.read_register(0xD022);
                 } else {
-                    if (self.char_data & 0x40) != 0 {
-                        dst_color[0] = self.read_register(0xD022);
-                    } else {
-                        dst_color[0] = self.read_register(0xD021);
-                    }
+                    dst_color[0] = self.read_register(0xD021);
                 }
 
                 dst_color[1] = self.color_data;
@@ -1250,16 +1233,15 @@ impl VIC {
                                 } else {
                                     col = color;
                                 }
+                            } else if (plane0_l & 0x80000000) != 0 {
+                                col = self.read_register(0xD025);
                             } else {
-                                if (plane0_l & 0x80000000) != 0 {
-                                    col = self.read_register(0xD025);
-                                } else {
-                                    i += 1;
-                                    plane0_l <<= 1;
-                                    plane1_l <<= 1;
-                                    continue;
-                                }
+                                i += 1;
+                                plane0_l <<= 1;
+                                plane1_l <<= 1;
+                                continue;
                             }
+
                             if self.sprite_coll_buffer[(q + i) as usize] != 0 {
                                 spr_coll |= self.sprite_coll_buffer[(q + i) as usize] | sbit;
                             } else {
@@ -1281,16 +1263,15 @@ impl VIC {
                                 } else {
                                     col = color;
                                 }
+                            } else if (plane0_r & 0x80000000) != 0 {
+                                col = self.read_register(0xD025);
                             } else {
-                                if (plane0_r & 0x80000000) != 0 {
-                                    col = self.read_register(0xD025);
-                                } else {
-                                    i += 1;
-                                    plane0_r <<= 1;
-                                    plane1_r <<= 1;
-                                    continue;
-                                }
+                                i += 1;
+                                plane0_r <<= 1;
+                                plane1_r <<= 1;
+                                continue;
                             }
+
                             if self.sprite_coll_buffer[(q + i) as usize] != 0 {
                                 spr_coll |= self.sprite_coll_buffer[(q + i) as usize] | sbit;
                             } else {
@@ -1383,14 +1364,12 @@ impl VIC {
                                 } else {
                                     col = color;
                                 }
+                            } else if (plane0 & 0x80000000) != 0 {
+                                col = self.read_register(0xD025);
                             } else {
-                                if (plane0 & 0x80000000) != 0 {
-                                    col = self.read_register(0xD025);
-                                } else {
-                                    plane0 <<= 1;
-                                    plane1 <<= 1;
-                                    continue;
-                                }
+                                plane0 <<= 1;
+                                plane1 <<= 1;
+                                continue;
                             }
 
                             if self.sprite_coll_buffer[(q + i) as usize] != 0 {

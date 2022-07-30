@@ -3,10 +3,10 @@ extern crate minifb;
 
 mod font;
 
-use c64;
+use crate::c64;
+use crate::utils;
 use minifb::*;
 use std::io::Write;
-use utils;
 
 const DEBUG_W: usize = 640;
 const DEBUG_H: usize = 432;
@@ -185,7 +185,7 @@ impl Debugger {
             self.mempage_offset -= 0x400;
         }
 
-        let mut start = 0x0000 + self.mempage_offset as u16;
+        let mut start = self.mempage_offset as u16;
         let mut title = Vec::new();
         let mut hex_offset_x = 0;
         let _ = write!(&mut title, "Memory page ${:04x}-${:04x}", start, start + 0x3FF);
@@ -194,7 +194,7 @@ impl Debugger {
             DEBUG_W,
             0,
             0,
-            &String::from_utf8(title).unwrap().to_owned()[..],
+            &String::from_utf8(title).unwrap()[..],
             0x0A,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 34, 0, "*RAM*", 0x0E);
@@ -234,7 +234,7 @@ impl Debugger {
             DEBUG_W,
             0,
             0,
-            &String::from_utf8(title).unwrap().to_owned()[..],
+            &String::from_utf8(title).unwrap()[..],
             0x0A,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 34, 0, "*VIC*", 0x0E);
@@ -273,14 +273,14 @@ impl Debugger {
             DEBUG_W,
             0,
             0,
-            &String::from_utf8(title).unwrap().to_owned()[..],
+            &String::from_utf8(title).unwrap()[..],
             0x0A,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 34, 0, "*CIA*", 0x0E);
 
         for y in 0..25 {
             for x in 0..40 {
-                if start >= 0xDC10 && start < 0xDD00 {
+                if (0xDC10..0xDD00).contains(&start) {
                     hex_offset_x += 1;
                     start += 1;
                     continue;
@@ -317,7 +317,7 @@ impl Debugger {
             DEBUG_W,
             0,
             0,
-            &String::from_utf8(title).unwrap().to_owned()[..],
+            &String::from_utf8(title).unwrap()[..],
             0x0A,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 34, 0, "*SID*", 0x0E);
@@ -357,7 +357,7 @@ impl Debugger {
             DEBUG_W,
             0,
             0,
-            &String::from_utf8(title).unwrap().to_owned()[..],
+            &String::from_utf8(title).unwrap()[..],
             0x0A,
         );
         self.font
@@ -410,7 +410,7 @@ impl Debugger {
             DEBUG_W,
             x_pos,
             y_pos,
-            &String::from_utf8(hex_value).unwrap().to_owned()[..],
+            &String::from_utf8(hex_value).unwrap()[..],
             base_color,
         );
     }
@@ -434,7 +434,7 @@ impl Debugger {
             DEBUG_W,
             51,
             3,
-            &String::from_utf8(vmatrix_txt).unwrap().to_owned()[..],
+            &String::from_utf8(vmatrix_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 45, 4, "Char: ", 0x0F);
@@ -443,7 +443,7 @@ impl Debugger {
             DEBUG_W,
             51,
             4,
-            &String::from_utf8(char_txt).unwrap().to_owned()[..],
+            &String::from_utf8(char_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 43, 5, "Bitmap: ", 0x0F);
@@ -452,7 +452,7 @@ impl Debugger {
             DEBUG_W,
             51,
             5,
-            &String::from_utf8(bmp_txt).unwrap().to_owned()[..],
+            &String::from_utf8(bmp_txt).unwrap()[..],
             0x0E,
         );
         self.font
@@ -462,7 +462,7 @@ impl Debugger {
             DEBUG_W,
             51,
             6,
-            &String::from_utf8(bank_txt).unwrap().to_owned()[..],
+            &String::from_utf8(bank_txt).unwrap()[..],
             0x0E,
         );
     }
@@ -571,7 +571,7 @@ impl Debugger {
             DEBUG_W,
             47,
             22,
-            &String::from_utf8(pc_txt).unwrap().to_owned()[..],
+            &String::from_utf8(pc_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 53, 22, "A:", 0x0F);
@@ -580,7 +580,7 @@ impl Debugger {
             DEBUG_W,
             55,
             22,
-            &String::from_utf8(a_txt).unwrap().to_owned()[..],
+            &String::from_utf8(a_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 59, 22, "X:", 0x0F);
@@ -589,7 +589,7 @@ impl Debugger {
             DEBUG_W,
             61,
             22,
-            &String::from_utf8(x_txt).unwrap().to_owned()[..],
+            &String::from_utf8(x_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 65, 22, "Y:", 0x0F);
@@ -598,7 +598,7 @@ impl Debugger {
             DEBUG_W,
             67,
             22,
-            &String::from_utf8(y_txt).unwrap().to_owned()[..],
+            &String::from_utf8(y_txt).unwrap()[..],
             0x0E,
         );
         self.font.draw_text(&mut self.window_buffer, DEBUG_W, 71, 22, "SP:", 0x0F);
@@ -607,7 +607,7 @@ impl Debugger {
             DEBUG_W,
             74,
             22,
-            &String::from_utf8(sp_txt).unwrap().to_owned()[..],
+            &String::from_utf8(sp_txt).unwrap()[..],
             0x0E,
         );
         self.font
@@ -617,7 +617,7 @@ impl Debugger {
             DEBUG_W,
             61,
             23,
-            &String::from_utf8(p_txt).unwrap().to_owned()[..],
+            &String::from_utf8(p_txt).unwrap()[..],
             0x0E,
         );
     }

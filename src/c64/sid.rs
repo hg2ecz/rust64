@@ -5,8 +5,8 @@ extern crate sdl2;
 
 #[cfg(not(target_os = "redox"))]
 use self::sdl2::audio::{AudioCallback, AudioSpecDesired};
-use c64::memory;
-use c64::sid_tables::*;
+use crate::c64::memory;
+use crate::c64::sid_tables::*;
 use std::cell::RefCell;
 use std::f32;
 use std::rc::Rc;
@@ -122,6 +122,7 @@ impl SIDVoice {
 }
 
 // the SID chip with associated SDL2 audio device
+#[allow(clippy::upper_case_acronyms)]
 pub struct SID {
     mem_ref: Option<memory::MemShared>,
     #[cfg(not(target_os = "redox"))]
@@ -330,19 +331,14 @@ impl SIDAudioDevice {
         match addr {
             0xD419..=0xD41A => {
                 self.last_sid_byte = 0;
-                let rval = 0xFF;
-                rval
+                0xFF
             }
             0xD41B..=0xD41C => {
                 self.last_sid_byte = 0;
-                let rval = rand::random::<u8>();
-                rval
+                rand::random::<u8>()
             }
             0xD420..=0xD7FF => self.read_register(0xD400 + (addr % 0x0020)),
-            _ => {
-                let rval = self.last_sid_byte;
-                rval
-            }
+            _ => self.last_sid_byte,
         }
     }
 
@@ -488,10 +484,9 @@ impl SIDAudioDevice {
 
     fn calculate_filter(&mut self) {
         let f = self.filter_freq as f32;
-        let resonance: f32;
         let mut arg: f32;
 
-        match self.filter_type {
+        let resonance = match self.filter_type {
             FilterType::None => {
                 self.d1 = 0.0;
                 self.d2 = 0.0;
@@ -508,13 +503,9 @@ impl SIDAudioDevice {
                 self.iir_att = 1.0;
                 return;
             }
-            FilterType::Lowpass | FilterType::LowBandpass => {
-                resonance = self.lowpass_resonance(f);
-            }
-            _ => {
-                resonance = self.highpass_resonance(f);
-            }
-        }
+            FilterType::Lowpass | FilterType::LowBandpass => self.lowpass_resonance(f),
+            _ => self.highpass_resonance(f),
+        };
 
         arg = resonance / ((SAMPLE_FREQ >> 1) as f32);
         if arg > 0.99 {
@@ -524,7 +515,7 @@ impl SIDAudioDevice {
             arg = 0.01;
         }
 
-        self.g2 = 0.55 + 1.2 * arg * arg - 1.2 * arg + 0.0133333333 * self.filter_resonance as f32;
+        self.g2 = 0.55 + 1.2 * arg * arg - 1.2 * arg + 0.013_333_334 * self.filter_resonance as f32;
         self.g1 = -2.0 * self.g2.sqrt() * (f32::consts::PI * arg).cos();
 
         match self.filter_type {
@@ -631,8 +622,6 @@ impl AudioCallback for SIDAudioDevice {
             let mut total_output_filter: i32 = 0;
 
             for i in 0..3 {
-                let envelope: f32;
-
                 match self.voices[i].state {
                     VoiceState::Attack => {
                         self.voices[i].level = self.voices[i].level.wrapping_add(self.voices[i].attack_add);
@@ -667,7 +656,7 @@ impl AudioCallback for SIDAudioDevice {
                     }
                 }
 
-                envelope = ((self.voices[i].level as f32) * master_volume as f32) / (0xFFFFFF * 0xF) as f32;
+                let envelope = ((self.voices[i].level as f32) * master_volume as f32) / (0xFFFFFF * 0xF) as f32;
                 let modulatee = self.voices[i].modulatee;
                 let modulator = self.voices[i].modulator;
 

@@ -1,7 +1,7 @@
 // memory banks
+use crate::utils;
 use std::cell::RefCell;
 use std::rc::Rc;
-use utils;
 
 pub type MemShared = Rc<RefCell<Memory>>;
 
@@ -162,7 +162,7 @@ impl Memory {
                 if self.io_on {
                     return &mut self.io;
                 }
-                return &mut self.ram;
+                &mut self.ram
             }
             0xE000..=0xFFFF => {
                 if self.kernal_on {
@@ -214,7 +214,7 @@ impl Memory {
             self.update_memory_latch();
         }
 
-        return true;
+        true
     }
 
     // Read a byte from memory

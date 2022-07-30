@@ -14,9 +14,9 @@ mod sid;
 mod sid_tables;
 mod vic_tables;
 
-use debugger;
+use crate::debugger;
+use crate::utils;
 use minifb::*;
-use utils;
 
 pub const SCREEN_WIDTH: usize = 384; // extend 20 pixels left and right for the borders
 pub const SCREEN_HEIGHT: usize = 272; // extend 36 pixels top and down for the borders
@@ -117,7 +117,7 @@ impl C64 {
             self.powered_on = self.cpu.borrow_mut().pc == 0xFCE2;
             if self.powered_on {
                 let crt_file = &self.crt_to_load.to_owned()[..];
-                if crt_file.len() > 0 {
+                if !crt_file.is_empty() {
                     let crt = crt::Crt::from_filename(crt_file).unwrap();
                     println!("{:?}", crt);
                     crt.load_into_memory(self.memory.borrow_mut());
@@ -132,7 +132,7 @@ impl C64 {
             if self.boot_complete {
                 let prg_file = &self.file_to_load.to_owned()[..];
 
-                if prg_file.len() > 0 {
+                if !prg_file.is_empty() {
                     self.boot_complete = true;
                     self.load_prg(prg_file);
                 }
@@ -207,10 +207,8 @@ impl C64 {
             filename, start_address, start_address
         );
 
-        for i in 2..(prg_data.len()) {
-            self.memory
-                .borrow_mut()
-                .write_byte(start_address + (i as u16) - 2, prg_data[i]);
+        for (i, &pdata) in prg_data.iter().enumerate().skip(2) {
+            self.memory.borrow_mut().write_byte(start_address + (i as u16) - 2, pdata);
         }
     }
 }

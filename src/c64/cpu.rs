@@ -1,12 +1,12 @@
 // The CPU
-use c64::cia;
-use c64::memory;
-use c64::opcodes;
-use c64::sid;
-use c64::vic;
+use crate::c64::cia;
+use crate::c64::memory;
+use crate::c64::opcodes;
+use crate::c64::sid;
+use crate::c64::vic;
+use crate::utils;
 use std::cell::RefCell;
 use std::rc::Rc;
-use utils;
 
 pub type CPUShared = Rc<RefCell<CPU>>;
 
@@ -46,6 +46,7 @@ pub enum CPUState {
     ExecuteOp,
 }
 
+#[allow(clippy::upper_case_acronyms)]
 pub struct CPU {
     pub pc: u16,                            // program counter
     pub sp: u8,                             // stack pointer
@@ -148,21 +149,18 @@ impl CPU {
 
     pub fn update(&mut self, c64_cycle_cnt: u32) {
         // check for irq and nmi
-        match self.state {
-            CPUState::FetchOp => {
-                if self.nmi && self.nmi_cycles_left == 0 && (c64_cycle_cnt - (self.first_nmi_cycle as u32) >= 2) {
-                    self.nmi_cycles_left = 7;
-                    self.state = CPUState::ProcessNMI;
-                } else if !self.get_status_flag(StatusFlag::InterruptDisable) {
-                    let irq_ready = (self.cia_irq || self.vic_irq) && self.irq_cycles_left == 0;
+        if let CPUState::FetchOp = self.state {
+            if self.nmi && self.nmi_cycles_left == 0 && (c64_cycle_cnt - (self.first_nmi_cycle as u32) >= 2) {
+                self.nmi_cycles_left = 7;
+                self.state = CPUState::ProcessNMI;
+            } else if !self.get_status_flag(StatusFlag::InterruptDisable) {
+                let irq_ready = (self.cia_irq || self.vic_irq) && self.irq_cycles_left == 0;
 
-                    if irq_ready && (c64_cycle_cnt - (self.first_irq_cycle as u32) >= 2) {
-                        self.irq_cycles_left = 7;
-                        self.state = CPUState::ProcessIRQ;
-                    }
+                if irq_ready && (c64_cycle_cnt - (self.first_irq_cycle as u32) >= 2) {
+                    self.irq_cycles_left = 7;
+                    self.state = CPUState::ProcessIRQ;
                 }
             }
-            _ => {}
         }
 
         match self.state {

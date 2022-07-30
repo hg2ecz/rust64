@@ -1,5 +1,5 @@
 // bitmap font used in debugger window
-use utils;
+use crate::utils;
 
 pub struct SysFont {
     data: Vec<u8>,
@@ -29,35 +29,35 @@ impl SysFont {
         font
     }
 
-    pub fn draw_text_rgb(&self, window_buffer: &mut Vec<u32>, window_w: usize, x: usize, y: usize, text: &str, color: u32) {
+    pub fn draw_text_rgb(&self, window_buffer: &mut [u32], window_w: usize, x: usize, y: usize, text: &str, color: u32) {
         let chars: Vec<char> = text.chars().collect();
-        for i in 0..text.len() {
+        for (i, &ch) in chars.iter().enumerate().take(text.len()) {
             self.draw_char_rgb(
                 window_buffer,
                 window_w,
-                x * 8 + 8 * i as usize,
-                y * 8 as usize,
-                self.ascii_to_petscii(chars[i]),
+                x * 8 + 8 * i,
+                y * 8,
+                self.ascii_to_petscii(ch),
                 color,
             );
         }
     }
 
-    pub fn draw_text(&self, window_buffer: &mut Vec<u32>, window_w: usize, x: usize, y: usize, text: &str, c64_color: u8) {
+    pub fn draw_text(&self, window_buffer: &mut [u32], window_w: usize, x: usize, y: usize, text: &str, c64_color: u8) {
         let chars: Vec<char> = text.chars().collect();
-        for i in 0..text.len() {
+        for (i, &ch) in chars.iter().enumerate().take(text.len()) {
             self.draw_char(
                 window_buffer,
                 window_w,
-                x * 8 + 8 * i as usize,
-                y * 8 as usize,
-                self.ascii_to_petscii(chars[i]),
+                x * 8 + 8 * i,
+                y * 8,
+                self.ascii_to_petscii(ch),
                 c64_color,
             );
         }
     }
 
-    pub fn draw_char(&self, window_buffer: &mut Vec<u32>, window_w: usize, x: usize, y: usize, charcode: u8, c64_color: u8) {
+    pub fn draw_char(&self, window_buffer: &mut [u32], window_w: usize, x: usize, y: usize, charcode: u8, c64_color: u8) {
         self.draw_char_rgb(
             window_buffer,
             window_w,
@@ -68,7 +68,7 @@ impl SysFont {
         );
     }
 
-    pub fn draw_char_rgb(&self, window_buffer: &mut Vec<u32>, window_w: usize, x: usize, y: usize, charcode: u8, color: u32) {
+    pub fn draw_char_rgb(&self, window_buffer: &mut [u32], window_w: usize, x: usize, y: usize, charcode: u8, color: u32) {
         let char_w: i32 = 8;
         let char_h: i32 = 8;
         let data_x = char_w * (charcode % 32) as i32;
@@ -76,15 +76,13 @@ impl SysFont {
         let data_w = data_x + char_w;
         let data_h = data_y + char_h;
 
-        let mut k = 0;
         let mut l = 0;
-        for i in data_y..data_h {
+        for (k, i) in (data_y..data_h).enumerate() {
             for j in data_x..data_w {
                 window_buffer[x + l + window_w * (y + k)] = self.data[j as usize + (i * 256) as usize] as u32 * color;
                 l += 1;
             }
             l = 0;
-            k += 1;
         }
     }
 

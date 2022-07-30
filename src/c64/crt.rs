@@ -1,4 +1,4 @@
-use c64::memory;
+use crate::c64::memory;
 use std;
 use std::fmt;
 use std::fs::File;
@@ -48,7 +48,7 @@ impl Crt {
             }
             let length = file.read_u32::<BigEndian>().map_err(|e| e.to_string())?;
             let chip_type = ChipType::from_u16(file.read_u16::<BigEndian>().map_err(|e| e.to_string())?)
-                .ok_or("Invalid chip type".to_string())?;
+                .ok_or_else(|| "Invalid chip type".to_string())?;
             let bank_number = file.read_u16::<BigEndian>().map_err(|e| e.to_string())?;
             let load_addr = file.read_u16::<BigEndian>().map_err(|e| e.to_string())?;
             let data_size = file.read_u16::<BigEndian>().map_err(|e| e.to_string())?;
@@ -57,26 +57,26 @@ impl Crt {
 
             chips.push(Chip {
                 signature: chip_signature,
-                length: length,
-                chip_type: chip_type,
-                bank_number: bank_number,
-                load_addr: load_addr,
-                data_size: data_size,
-                data: data,
+                length,
+                chip_type,
+                bank_number,
+                load_addr,
+                data_size,
+                data,
             });
         }
 
         Ok(Crt {
             header: Header {
-                signature: signature,
-                header_len: header_len,
-                version: version,
-                hw_type: hw_type,
-                exrom: exrom,
-                game: game,
-                name: name,
+                signature,
+                header_len,
+                version,
+                hw_type,
+                exrom,
+                game,
+                name,
             },
-            chips: chips,
+            chips,
         })
     }
 
