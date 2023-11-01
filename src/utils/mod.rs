@@ -23,7 +23,7 @@ macro_rules! as_mut {
 pub fn open_file(filename: &str, offset: u64) -> Vec<u8> {
     let path = Path::new(&filename);
 
-    let mut file = match File::open(&path) {
+    let mut file = match File::open(path) {
         Err(why) => panic!("Couldn't open {}: {}", path.display(), why),
         Ok(file) => file,
     };

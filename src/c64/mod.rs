@@ -155,14 +155,11 @@ impl C64 {
             self.cpu.borrow_mut().update(self.cycle_count);
 
             // update the debugger window if it exists
-            match self.debugger {
-                Some(ref mut dbg) => {
-                    dbg.update_vic_window(&mut self.vic);
-                    if should_trigger_vblank {
-                        dbg.render(&mut self.cpu, &mut self.memory);
-                    }
+            if let Some(ref mut dbg) = self.debugger {
+                dbg.update_vic_window(&mut self.vic);
+                if should_trigger_vblank {
+                    dbg.render(&mut self.cpu, &mut self.memory);
                 }
-                None => (),
             }
 
             // redraw the screen and process input on VBlank

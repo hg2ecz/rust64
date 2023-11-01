@@ -342,7 +342,7 @@ pub fn fetch_operand_addr(cpu: &mut cpu::CPU) -> bool {
             1 => {
                 let x = cpu.x as u16;
                 let base_addr = cpu.instruction.operand_addr;
-                cpu.instruction.operand_addr = (base_addr.wrapping_add(x) as u16) & 0xFF;
+                cpu.instruction.operand_addr = base_addr.wrapping_add(x) & 0xFF;
             }
             _ => panic!(
                 "Too many cycles for operand address fetch! ({}) ",
@@ -356,7 +356,7 @@ pub fn fetch_operand_addr(cpu: &mut cpu::CPU) -> bool {
             1 => {
                 let y = cpu.y as u16;
                 let base_addr = cpu.instruction.operand_addr;
-                cpu.instruction.operand_addr = (base_addr.wrapping_add(y) as u16) & 0xFF;
+                cpu.instruction.operand_addr = base_addr.wrapping_add(y) & 0xFF;
             }
             _ => panic!(
                 "Too many cycles for operand address fetch! ({}) ",
